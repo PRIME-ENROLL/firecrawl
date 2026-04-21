@@ -74,10 +74,14 @@ export function performCosineSimilarityV2(
       });
     };
 
+    const searchVector = textToVector(searchQuery);
+
     // Calculate similarity scores
     const similarityScores = links.map(link => {
-      const linkVector = textToVector(link.url); // TODO: we can use title/description here as well!
-      const searchVector = textToVector(searchQuery);
+      const linkText = [link.url, link.title, link.description]
+        .filter(Boolean)
+        .join(" ");
+      const linkVector = textToVector(linkText);
       return cosineSimilarity(linkVector, searchVector);
     });
 
