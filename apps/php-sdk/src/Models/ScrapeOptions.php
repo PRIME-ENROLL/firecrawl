@@ -7,7 +7,7 @@ namespace Firecrawl\Models;
 final class ScrapeOptions
 {
     /**
-     * @param list<string|JsonFormat>|null $formats
+     * @param list<string|JsonFormat|ScreenshotFormat|QuestionFormat|HighlightsFormat|QueryFormat>|null $formats
      * @param array<string, string>|null   $headers
      * @param list<string>|null            $includeTags
      * @param list<string>|null            $excludeTags
@@ -31,17 +31,23 @@ final class ScrapeOptions
         private readonly ?bool $blockAds = null,
         private readonly ?string $proxy = null,
         private readonly ?int $maxAge = null,
+        private readonly ?int $minAge = null,
         private readonly ?bool $storeInCache = null,
+        private readonly ?bool $lockdown = null,
         private readonly ?string $integration = null,
+        /** @var array<string, string>|null */
+        private readonly ?array $profile = null,
+        private readonly ?bool $changeTracking = null,
     ) {}
 
     /**
-     * @param list<string|JsonFormat>|null      $formats
-     * @param array<string, string>|null        $headers
-     * @param list<string>|null                 $includeTags
-     * @param list<string>|null                 $excludeTags
-     * @param list<mixed>|null                  $parsers
-     * @param list<array<string, mixed>>|null   $actions
+     * @param list<string|JsonFormat|ScreenshotFormat|QuestionFormat|HighlightsFormat|QueryFormat>|null $formats
+     * @param array<string, string>|null                    $headers
+     * @param list<string>|null                             $includeTags
+     * @param list<string>|null                             $excludeTags
+     * @param list<mixed>|null                              $parsers
+     * @param list<array<string, mixed>>|null               $actions
+     * @param array<string, string>|null                    $profile
      */
     public static function with(
         ?array $formats = null,
@@ -62,12 +68,17 @@ final class ScrapeOptions
         ?int $maxAge = null,
         ?bool $storeInCache = null,
         ?string $integration = null,
+        ?bool $lockdown = null,
+        ?int $minAge = null,
+        ?array $profile = null,
+        ?bool $changeTracking = null,
     ): self {
         return new self(
             $formats, $headers, $includeTags, $excludeTags, $onlyMainContent,
             $timeout, $waitFor, $mobile, $parsers, $actions, $location,
             $skipTlsVerification, $removeBase64Images, $blockAds, $proxy,
-            $maxAge, $storeInCache, $integration,
+            $maxAge, $minAge, $storeInCache, $lockdown, $integration, $profile,
+            $changeTracking,
         );
     }
 
@@ -78,7 +89,14 @@ final class ScrapeOptions
 
         if ($this->formats !== null) {
             $data['formats'] = array_map(
-                fn (string|JsonFormat $f): string|array => $f instanceof JsonFormat ? $f->toArray() : $f,
+                fn (string|JsonFormat|ScreenshotFormat|QuestionFormat|HighlightsFormat|QueryFormat $f): string|array =>
+                    (
+                        $f instanceof JsonFormat
+                        || $f instanceof ScreenshotFormat
+                        || $f instanceof QuestionFormat
+                        || $f instanceof HighlightsFormat
+                        || $f instanceof QueryFormat
+                    ) ? $f->toArray() : $f,
                 $this->formats,
             );
         }
@@ -99,8 +117,12 @@ final class ScrapeOptions
             'blockAds' => $this->blockAds,
             'proxy' => $this->proxy,
             'maxAge' => $this->maxAge,
+            'minAge' => $this->minAge,
             'storeInCache' => $this->storeInCache,
+            'lockdown' => $this->lockdown,
             'integration' => $this->integration,
+            'profile' => $this->profile,
+            'changeTracking' => $this->changeTracking,
         ];
 
         foreach ($fields as $key => $value) {
@@ -112,7 +134,7 @@ final class ScrapeOptions
         return $data;
     }
 
-    /** @return list<string|JsonFormat>|null */
+    /** @return list<string|JsonFormat|ScreenshotFormat|QuestionFormat|HighlightsFormat|QueryFormat>|null */
     public function getFormats(): ?array
     {
         return $this->formats;
@@ -203,8 +225,29 @@ final class ScrapeOptions
         return $this->storeInCache;
     }
 
+    public function getLockdown(): ?bool
+    {
+        return $this->lockdown;
+    }
+
     public function getIntegration(): ?string
     {
         return $this->integration;
+    }
+
+    public function getMinAge(): ?int
+    {
+        return $this->minAge;
+    }
+
+    /** @return array<string, string>|null */
+    public function getProfile(): ?array
+    {
+        return $this->profile;
+    }
+
+    public function getChangeTracking(): ?bool
+    {
+        return $this->changeTracking;
     }
 }
